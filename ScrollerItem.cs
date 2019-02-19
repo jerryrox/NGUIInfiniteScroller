@@ -16,7 +16,7 @@ public class ScrollerItem : MonoBehaviour {
 	public Transform Transform;
 
 
-	void Awake()
+	public void Initialize()
 	{
 		Object = gameObject;
 		Transform = transform;

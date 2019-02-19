@@ -149,6 +149,7 @@ public class InfiniteScroller : MonoBehaviour {
 		for(int i=items.Count; i<itemCount; i++)
 		{
 			ScrollerItem item = NGUITools.AddChild(gameObject, Prefab).GetComponent<ScrollerItem>();
+			item.Initialize();
 			items.Add(item);
 		}
 
@@ -172,8 +173,14 @@ public class InfiniteScroller : MonoBehaviour {
 	/// <summary>
 	/// Resets the scrollview's position to the initial point, based on its Content Origin value.
 	/// </summary>
+	[ContextMenu("Reset Position")]
 	public void ResetPosition()
 	{
+		#if UNITY_EDITOR
+		if(!Application.isPlaying)
+			return;
+		#endif
+
 		// Determine whether items should be sorted in the direction of negative axis.
 		float signDirection = isNegativeSortDir ? -1 : 1;
 
@@ -340,7 +347,6 @@ public class InfiniteScroller : MonoBehaviour {
 				pivot == UIWidget.Pivot.TopLeft ||
 				pivot == UIWidget.Pivot.TopRight;
 		}
-		return false;
 	}
 
 	void Update()
