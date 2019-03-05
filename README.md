@@ -16,11 +16,12 @@ Further guides will be posted on my blog in the near future.
 1. Infinite scrolling (obviously)
 2. Simple, quick setup
 3. Preserves almost all features of a standard UIScrollView.
+4. Supports multi row/column of cells, depending on the scrollview's movement.
   
 ### Limitations
-1. Currently, it only supports one row/column of cells, depending on the scrollview's movement, but this will be fixed in future updates.
-2. Only Horizontal and Vertical movements are supported on the scrollview.
-3. Scrollbars will not be displayed properly, but this is also planned for fix.
-4. Does not support "Center" value of UIScrollView's Content Origin. I might support it when I need it myself.
-5. When you need to call ResetPosition() on the UIScrollView, you should use the InfiniteScroller's ResetPosition() instead, just to make sure it doesn't break.
-6. Only supports fixed item size. This means all cells will be positioned at a fixed interval; pretty much the same as UIGrid.
+
+1. Only Horizontal and Vertical movements are supported on the scrollview.
+2. Scrollbars will not be displayed properly, but this is also planned for fix.
+3. Does not support "Center" value of UIScrollView's Content Origin. I might support it when I need it myself.
+4. When you need to call ResetPosition() on the UIScrollView, you should use the InfiniteScroller's ResetPosition() instead, just to make sure it doesn't break.
+5. Only supports fixed item size. This means all cells will be positioned at a fixed interval; pretty much the same as UIGrid.
