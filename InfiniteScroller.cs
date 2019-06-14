@@ -14,6 +14,11 @@ public class InfiniteScroller : MonoBehaviour {
 	public UIScrollView ScrollView;
 
 	/// <summary>
+	/// Panel position springer to support focusing on a child object.
+	/// </summary>
+	public SpringPanel Springer;
+
+	/// <summary>
 	/// Prefab of the cell which will be instantiated.
 	/// </summary>
 	public GameObject Prefab;
@@ -244,7 +249,6 @@ public class InfiniteScroller : MonoBehaviour {
 		// Reset all items' position and index.
 		if(ScrollView.movement == UIScrollView.Movement.Horizontal)
 		{
-			float groupLineSize = groupSize * itemSize.y;
 			float groupItemFirstPos = (groupSize-1) * itemSize.y / 2f;
 
 			// If pivot at the bottom, reverse first pos
@@ -267,7 +271,6 @@ public class InfiniteScroller : MonoBehaviour {
 		}
 		else
 		{
-			float groupLineSize = groupSize * itemSize.x;
 			float groupItemFirstPos = (groupSize-1) * itemSize.x / -2f;
 
 			// If pivot at the right, reverse first pos
@@ -306,6 +309,45 @@ public class InfiniteScroller : MonoBehaviour {
 
 		// Update all items
 		UpdateItems();
+	}
+
+	/// <summary>
+	/// Focuses the scrollview position on the child of specified index.
+	/// </summary>
+	public void FocusOnChild(int index)
+	{
+		// There must be a valid spring panel component.
+		if(Springer == null)
+			return;
+
+		Springer.enabled = false;
+		
+		// Make sure it's within bounds.
+		index = Mathf.Clamp(index, 0, totalSize-1);
+
+		float panelSize = GetPanelSize();
+		float sign = isNegativeSortDir ? -1f : 1f;
+		float cellSize = 0;
+		if(ScrollView.movement == UIScrollView.Movement.Horizontal)
+			cellSize = itemSize.x;
+		else
+			cellSize = itemSize.y;
+		
+		float originBound = originPosition;
+		float lastBound = originBound + (panelSize - totalSize * cellSize) * sign;
+		float targetPos = index * cellSize * -sign + originBound + (panelSize * 0.5f * sign) - (cellSize * 0.5f * sign);
+		if(isNegativeSortDir)
+			targetPos = Mathf.Clamp(targetPos, originBound, lastBound);
+		else
+			targetPos = Mathf.Clamp(targetPos, lastBound, originBound);
+		
+		Springer.target = panelTransform.localPosition;
+		if(ScrollView.movement == UIScrollView.Movement.Horizontal)
+			Springer.target.x = targetPos;
+		else
+			Springer.target.y = targetPos;
+		
+		Springer.enabled = true;
 	}
 
 	/// <summary>
