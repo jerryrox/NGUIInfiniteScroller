@@ -24,6 +24,11 @@ public class InfiniteScroller : MonoBehaviour {
 	public GameObject Prefab;
 
 	/// <summary>
+	/// The scrollbar which will represent this object's scrolling progress.
+	/// </summary>
+	public InfiniteScrollbar Scrollbar;
+
+	/// <summary>
 	/// Listener function called whenever there is an update on an item.
 	/// </summary>
 	public ItemUpdateHandler OnItemUpdate;
@@ -323,7 +328,7 @@ public class InfiniteScroller : MonoBehaviour {
 		Springer.enabled = false;
 		
 		// Make sure it's within bounds.
-		index = Mathf.Clamp(index, 0, totalSize-1);
+		index = Mathf.Clamp(index / groupSize, 0, (totalSize-1) / groupSize);
 
 		float panelSize = GetPanelSize();
 		float sign = isNegativeSortDir ? -1f : 1f;
@@ -471,6 +476,37 @@ public class InfiniteScroller : MonoBehaviour {
 
 		firstItems.Clear();
 		lastItems.Clear();
+	}
+
+	/// <summary>
+	/// Updates the scrollbar's display.
+	/// </summary>
+	void UpdateScrollbar()
+	{
+		if(Scrollbar == null)
+			return;
+		
+		float fullSize = (totalSize-1) / groupSize + 1;
+		fullSize *= itemSizeToMoveDir;
+
+		float max = originPosition;
+		float panelSize = GetPanelSize();
+		if(panelSize < fullSize)
+			max += (fullSize - panelSize) * (isNegativeSortDir ? 1f : -1f);
+
+		float cur = (
+			ScrollView.movement == UIScrollView.Movement.Vertical ?
+			panelTransform.localPosition.y :
+			panelTransform.localPosition.x
+		);
+		
+		Scrollbar.Draw(
+			ScrollView.movement == UIScrollView.Movement.Vertical,
+			originPosition,
+			max,
+			cur,
+			panelSize
+		);
 	}
 
 	/// <summary>
@@ -650,6 +686,9 @@ public class InfiniteScroller : MonoBehaviour {
 				}
 			}
 		}
+
+		// Intercept scrollbar update
+		UpdateScrollbar();
 
 		// Store last position for later use.
 		lastPosition = curPosition;
