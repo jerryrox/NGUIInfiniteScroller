@@ -584,113 +584,113 @@ public class InfiniteScroller : MonoBehaviour {
 	{
 		int boundIndexLimit = totalSize - items.Count;
 
-		// If total size fits within the item cells count, don't process anything.
-		if(boundIndexLimit <= 0)
-			return;
-
-		// Do movement-specific preparations first
-		float curPosition = 0f;
-		if(ScrollView.movement == UIScrollView.Movement.Horizontal)
-			curPosition = panelTransform.localPosition.x;
-		else
-			curPosition = panelTransform.localPosition.y;
-
-		// If the scrollview is moving
-		float deltaPosition = curPosition - lastPosition;
-		if(deltaPosition != 0)
+		// Cell repositioning should only occur when there are more number of items to display than the allocated cells.
+		if(boundIndexLimit > 0)
 		{
-			// Whether scrollview is moving towards the content sort direction.
-			// If Vertical movement && Top origin && deltaPosition > 0, this should be false.
-			bool isMovingToSortDir = (isNegativeSortDir && deltaPosition < 0) || (!isNegativeSortDir && deltaPosition > 0);
-
-			// If moving in a way which triggers the next item's update
-			if(!isMovingToSortDir)
-			{
-				// If we didn't reach the bound index high limit
-				if(boundIndex < boundIndexLimit)
-				{
-					// If Top->Down or Right->Left sorting method
-					if(isNegativeSortDir)
-					{
-						while(curPosition > boundPositions[1])
-						{
-							// Change bound positions to positive direction
-							IncrementBoundPositions(1f, true);
-							// Bring first item to last
-							SetFirstItemToLast(-1f);
-
-							// If reached the bound index high limit, break out
-							if(boundIndex >= boundIndexLimit)
-								break;
-						}
-					}
-					// Else, Down->Top or Left->Right sorting method
-					else
-					{
-						while(curPosition < boundPositions[1])
-						{
-							// Change bound positions to negative direction
-							IncrementBoundPositions(-1f, true);
-							// Bring first item to last
-							SetFirstItemToLast(1f);
-
-							// If reached the bound index high limit, break out
-							if(boundIndex >= boundIndexLimit)
-								break;
-						}
-					}
-
-					// Invalidate the scrollview so we don't face any bound-related issues while dragging.
-					ScrollView.InvalidateBounds();
-				}
-			}
-			// Else, it triggers the previous item's update.
+			// Do movement-specific preparations first
+			float curPosition = 0f;
+			if(ScrollView.movement == UIScrollView.Movement.Horizontal)
+				curPosition = panelTransform.localPosition.x;
 			else
+				curPosition = panelTransform.localPosition.y;
+
+			// If the scrollview is moving
+			float deltaPosition = curPosition - lastPosition;
+			if(deltaPosition != 0)
 			{
-				// If we didn't reach the bound index low limit
-				if(boundIndex > 0)
+				// Whether scrollview is moving towards the content sort direction.
+				// If Vertical movement && Top origin && deltaPosition > 0, this should be false.
+				bool isMovingToSortDir = (isNegativeSortDir && deltaPosition < 0) || (!isNegativeSortDir && deltaPosition > 0);
+
+				// If moving in a way which triggers the next item's update
+				if(!isMovingToSortDir)
 				{
-					// If Top->Down or Right->Left sorting method
-					if(isNegativeSortDir)
+					// If we didn't reach the bound index high limit
+					if(boundIndex < boundIndexLimit)
 					{
-						while(curPosition < boundPositions[0])
+						// If Top->Down or Right->Left sorting method
+						if(isNegativeSortDir)
 						{
-							// Change bound positions to negative direction
-							IncrementBoundPositions(-1f, false);
-							// Bring last item to first
-							SetLastItemToFirst(1f);
+							while(curPosition > boundPositions[1])
+							{
+								// Change bound positions to positive direction
+								IncrementBoundPositions(1f, true);
+								// Bring first item to last
+								SetFirstItemToLast(-1f);
 
-							// If reached the bound index low limit, break out
-							if(boundIndex <= 0)
-								break;
+								// If reached the bound index high limit, break out
+								if(boundIndex >= boundIndexLimit)
+									break;
+							}
 						}
+						// Else, Down->Top or Left->Right sorting method
+						else
+						{
+							while(curPosition < boundPositions[1])
+							{
+								// Change bound positions to negative direction
+								IncrementBoundPositions(-1f, true);
+								// Bring first item to last
+								SetFirstItemToLast(1f);
+
+								// If reached the bound index high limit, break out
+								if(boundIndex >= boundIndexLimit)
+									break;
+							}
+						}
+
+						// Invalidate the scrollview so we don't face any bound-related issues while dragging.
+						ScrollView.InvalidateBounds();
 					}
-					// Else, Down->Top or Left->Right sorting method
-					else
+				}
+				// Else, it triggers the previous item's update.
+				else
+				{
+					// If we didn't reach the bound index low limit
+					if(boundIndex > 0)
 					{
-						while(curPosition > boundPositions[0])
+						// If Top->Down or Right->Left sorting method
+						if(isNegativeSortDir)
 						{
-							// Change bound positions to positive direction
-							IncrementBoundPositions(1f, false);
-							// Bring last item to first
-							SetLastItemToFirst(-1f);
+							while(curPosition < boundPositions[0])
+							{
+								// Change bound positions to negative direction
+								IncrementBoundPositions(-1f, false);
+								// Bring last item to first
+								SetLastItemToFirst(1f);
 
-							// If reached the bound index low limit, break out
-							if(boundIndex <= 0)
-								break;
+								// If reached the bound index low limit, break out
+								if(boundIndex <= 0)
+									break;
+							}
 						}
-					}
+						// Else, Down->Top or Left->Right sorting method
+						else
+						{
+							while(curPosition > boundPositions[0])
+							{
+								// Change bound positions to positive direction
+								IncrementBoundPositions(1f, false);
+								// Bring last item to first
+								SetLastItemToFirst(-1f);
 
-					// Invalidate the scrollview so we don't face any bound-related issues while dragging.
-					ScrollView.InvalidateBounds();
+								// If reached the bound index low limit, break out
+								if(boundIndex <= 0)
+									break;
+							}
+						}
+
+						// Invalidate the scrollview so we don't face any bound-related issues while dragging.
+						ScrollView.InvalidateBounds();
+					}
 				}
 			}
+
+			// Store last position for later use.
+			lastPosition = curPosition;
 		}
 
 		// Intercept scrollbar update
 		UpdateScrollbar();
-
-		// Store last position for later use.
-		lastPosition = curPosition;
 	}
 }
