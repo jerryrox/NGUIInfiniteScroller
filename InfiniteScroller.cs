@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,11 @@ public class InfiniteScroller : MonoBehaviour {
 	public GameObject Prefab;
 
 	/// <summary>
+	/// Alternative of Prefab field, in case the cells should be instantiated via code.
+	/// </summary>
+	public Func<ScrollerItem> Instantiator;
+
+	/// <summary>
 	/// The scrollbar which will represent this object's scrolling progress.
 	/// </summary>
 	public InfiniteScrollbar Scrollbar;
@@ -32,6 +38,11 @@ public class InfiniteScroller : MonoBehaviour {
 	/// Listener function called whenever there is an update on an item.
 	/// </summary>
 	public ItemUpdateHandler OnItemUpdate;
+
+	/// <summary>
+	/// Size of the area which an individual cell would occupy.
+	/// </summary>
+	public Vector2 ItemSize;
 
 	/// <summary>
 	/// Panel component attached with the scrollview.
@@ -58,12 +69,6 @@ public class InfiniteScroller : MonoBehaviour {
 	/// </summary>
 	[SerializeField]
 	private int groupSize = 1;
-
-	/// <summary>
-	/// Size of the area which an individual cell would occupy.
-	/// </summary>
-	[SerializeField]
-	private Vector2 itemSize;
 
 	/// <summary>
 	/// Item's size in terms of the movement direction.
@@ -164,7 +169,7 @@ public class InfiniteScroller : MonoBehaviour {
 		// Pre-evaluate relatively heavy checks.
 		isNegativeSortDir = IsNegativeSortDirection();
 		groupSortOffset = GetGroupSortOffset();
-		itemSizeToMoveDir = ScrollView.movement == UIScrollView.Movement.Horizontal ? itemSize.x : itemSize.y;
+		itemSizeToMoveDir = ScrollView.movement == UIScrollView.Movement.Horizontal ? ItemSize.x : ItemSize.y;
 
 		OnItemUpdate = onUpdate;
 		SetTotalSize(totalSize);
@@ -204,14 +209,18 @@ public class InfiniteScroller : MonoBehaviour {
 	/// </summary>
 	public void RebuildItems()
 	{
-		float size = ScrollView.movement == UIScrollView.Movement.Horizontal ? itemSize.x : itemSize.y;
+		float size = ScrollView.movement == UIScrollView.Movement.Horizontal ? ItemSize.x : ItemSize.y;
 		float panelSize = GetPanelSize();
 		int itemCount = (Mathf.CeilToInt(panelSize / size) + 2) * groupSize;
 
 		// Create missing items if needed.
 		for(int i=items.Count; i<itemCount; i++)
 		{
-			ScrollerItem item = NGUITools.AddChild(gameObject, Prefab).GetComponent<ScrollerItem>();
+			ScrollerItem item = (
+				Prefab != null ?
+				NGUITools.AddChild(gameObject, Prefab).GetComponent<ScrollerItem>() :
+				Instantiator()
+			);
 			item.Initialize();
 			items.Add(item);
 		}
@@ -254,7 +263,7 @@ public class InfiniteScroller : MonoBehaviour {
 		// Reset all items' position and index.
 		if(ScrollView.movement == UIScrollView.Movement.Horizontal)
 		{
-			float groupItemFirstPos = (groupSize-1) * itemSize.y / 2f;
+			float groupItemFirstPos = (groupSize-1) * ItemSize.y / 2f;
 
 			// If pivot at the bottom, reverse first pos
 			if(groupSortOffset == 1f)
@@ -268,15 +277,15 @@ public class InfiniteScroller : MonoBehaviour {
 					int index = g * groupSize + i;
 					items[index].Index = index;
 					items[index].Transform.localPosition = new Vector3(
-						itemSize.x * g * signDirection,
-						itemSize.y * i * groupItemDirection + groupItemFirstPos
+						ItemSize.x * g * signDirection,
+						ItemSize.y * i * groupItemDirection + groupItemFirstPos
 					);
 				}
 			}
 		}
 		else
 		{
-			float groupItemFirstPos = (groupSize-1) * itemSize.x / -2f;
+			float groupItemFirstPos = (groupSize-1) * ItemSize.x / -2f;
 
 			// If pivot at the right, reverse first pos
 			if(groupSortOffset == 1f)
@@ -290,8 +299,8 @@ public class InfiniteScroller : MonoBehaviour {
 					int index = g * groupSize + i;
 					items[index].Index = index;
 					items[index].Transform.localPosition = new Vector3(
-						itemSize.x * i * groupItemDirection + groupItemFirstPos,
-						itemSize.y * g * signDirection
+						ItemSize.x * i * groupItemDirection + groupItemFirstPos,
+						ItemSize.y * g * signDirection
 					);
 				}
 			}
@@ -334,9 +343,9 @@ public class InfiniteScroller : MonoBehaviour {
 		float sign = isNegativeSortDir ? -1f : 1f;
 		float cellSize = 0;
 		if(ScrollView.movement == UIScrollView.Movement.Horizontal)
-			cellSize = itemSize.x;
+			cellSize = ItemSize.x;
 		else
-			cellSize = itemSize.y;
+			cellSize = ItemSize.y;
 		
 		float originBound = originPosition;
 		float lastBound = originBound + (panelSize - totalSize * cellSize) * sign;
@@ -387,7 +396,7 @@ public class InfiniteScroller : MonoBehaviour {
 	/// </summary>
 	void ResetBoundPositions()
 	{
-		float size = ScrollView.movement == UIScrollView.Movement.Horizontal ? itemSize.x : itemSize.y;
+		float size = ScrollView.movement == UIScrollView.Movement.Horizontal ? ItemSize.x : ItemSize.y;
 		float signDirection = isNegativeSortDir ? 1f : -1f;
 		boundPositions[0] = originPosition + signDirection * size * 0.5f;
 		boundPositions[1] = originPosition + signDirection * size * 1.5f;
@@ -423,9 +432,9 @@ public class InfiniteScroller : MonoBehaviour {
 			// Position the item
 			Vector3 pos = last.Transform.localPosition;
 			if(ScrollView.movement == UIScrollView.Movement.Horizontal)
-				pos.x += itemSize.x * signDirection;
+				pos.x += ItemSize.x * signDirection;
 			else
-				pos.y += itemSize.y * signDirection;
+				pos.y += ItemSize.y * signDirection;
 			first.Transform.localPosition = pos;
 
 			// Trigger update on the first item.
@@ -465,9 +474,9 @@ public class InfiniteScroller : MonoBehaviour {
 			// Position the item
 			Vector3 pos = first.Transform.localPosition;
 			if(ScrollView.movement == UIScrollView.Movement.Horizontal)
-				pos.x += itemSize.x * signDirection;
+				pos.x += ItemSize.x * signDirection;
 			else
-				pos.y += itemSize.y * signDirection;
+				pos.y += ItemSize.y * signDirection;
 			last.Transform.localPosition = pos;
 
 			// Trigger update on the last item.
@@ -477,7 +486,7 @@ public class InfiniteScroller : MonoBehaviour {
 		firstItems.Clear();
 		lastItems.Clear();
 	}
-
+	
 	/// <summary>
 	/// Updates the scrollbar's display.
 	/// </summary>
@@ -690,7 +699,6 @@ public class InfiniteScroller : MonoBehaviour {
 			lastPosition = curPosition;
 		}
 
-		// Intercept scrollbar update
 		UpdateScrollbar();
 	}
 }
